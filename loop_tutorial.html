@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第 4 章 迴圈：翻滾吧！卡皮巴拉</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Fira+Code&display=swap');
+        
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #f3e5ab; 
+            background-image: radial-gradient(#d2b48c 0.8px, transparent 0.8px);
+            background-size: 24px 24px;
+            color: #5d4037;
+        }
+
+        .capy-container { max-width: 900px; margin: auto; }
+
+        .capy-card {
+            background-color: rgba(255, 255, 255, 0.92);
+            border: 4px solid #8b4513; 
+            border-radius: 2rem; 
+            box-shadow: 0 10px 0 #d2b48c;
+        }
+
+        .code-font { font-family: 'Fira Code', monospace; }
+
+        .btn-capy {
+            background-color: #fff;
+            border: 2px solid #8b4513;
+            color: #8b4513;
+            border-radius: 1rem;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 #8b4513;
+        }
+
+        .btn-capy:hover { background-color: #fffaf0; transform: translateY(-2px); box-shadow: 0 6px 0 #8b4513; }
+        .btn-capy:active { transform: translateY(3px); box-shadow: 0 1px 0 #8b4513; }
+        .btn-active { 
+            background-color: #8b4513 !important; 
+            color: #f3e5ab !important; 
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #5d4037 !important;
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .python-block {
+            background-color: #2d1e1a;
+            border-radius: 1.2rem;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        /* 模擬器樣式 */
+        .simulator-box {
+            background: #fff;
+            border: 3px dashed #8b4513;
+            border-radius: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sim-visual { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        
+        /* 程式碼追蹤區 */
+        .code-tracer {
+            background: #3e2723;
+            color: #d7ccc8;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            border-top: 2px solid #8b4513;
+        }
+        .code-line { transition: all 0.2s; opacity: 0.5; }
+        .code-line.active { opacity: 1; color: #fff; background: rgba(255,255,255,0.1); border-radius: 4px; padding-left: 5px; transform: translateX(5px); }
+
+        .capy-actor { font-size: 3.5rem; position: relative; transition: all 0.3s ease; z-index: 10; }
+        .item-pop { position: absolute; font-size: 2rem; animation: popUp 0.6s ease-out forwards; }
+
+        @keyframes popUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+        }
+
+        .grid-cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; border-radius: 8px; font-size: 1.1rem; }
+        .highlight-cell { background-color: #ffe4b5; border-color: #8b4513; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="capy-container">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="inline-block bg-white px-8 py-2 rounded-full border-4 border-[#8b4513] mb-4 shadow-lg">
+                <span class="text-3xl">🦫 🍊 🌿</span>
+            </div>
+            <h1 class="text-4xl font-bold text-[#5d4037] mb-2">第 4 章 迴圈：翻滾吧！卡皮巴拉</h1>
+            <p class="text-[#8b4513] font-bold">代碼同步版：觀察程式碼每一行的跳動</p>
+        </header>
+
+        <!-- Dynamic Simulator Zone -->
+        <div class="mb-8 px-2">
+            <div class="capy-card p-6 bg-white/95">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="sim-title" class="font-bold text-lg text-[#8b4513]">🦫 水豚模擬器</h3>
+                    <button onclick="runCurrentSimulation()" id="run-sim-btn" class="bg-[#8b4513] text-white px-6 py-2 rounded-full font-bold hover:opacity-90 active:scale-95 transition-all shadow-md">
+                        ▶ 執行模擬
+                    </button>
+                </div>
+                <div id="sim-viewport" class="simulator-box">
+                    <div class="sim-visual text-slate-400">請先點擊下方教學按鈕</div>
+                    <div id="sim-tracer" class="code-tracer code-font hidden">
+                        <!-- 動態插入追蹤碼 -->
+                    </div>
+                </div>
+                <div id="sim-status" class="mt-3 text-center font-mono text-sm text-[#8b4513] font-bold"></div>
+            </div>
+        </div>
+
+        <!-- Main Navigation -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <button onclick="showTopic('range')" id="btn-range" class="btn-capy p-3 font-bold">🍊 range 序列</button>
+            <button onclick="showTopic('for')" id="btn-for" class="btn-capy p-3 font-bold">🔁 for 點名</button>
+            <button onclick="showTopic('nested')" id="btn-nested" class="btn-capy p-3 font-bold">🧺 巢狀方陣</button>
+            <button onclick="showTopic('control')" id="btn-control" class="btn-capy p-3 font-bold">🛑 穩定撤退</button>
+            <button onclick="showTopic('while')" id="btn-while" class="btn-capy p-3 font-bold">🌊 while 漂流</button>
+            <button onclick="showTopic('math')" id="btn-math" class="btn-capy p-3 font-bold">🧮 佛系計算</button>
+            <button onclick="showTopic('pattern')" id="btn-pattern" class="btn-capy p-3 font-bold">🎨 疊疊樂圖</button>
+            <button onclick="showTopic('summary')" id="btn-summary" class="btn-capy p-3 font-bold bg-green-700 text-white border-green-900 shadow-[0_4px_0_#2d4a34]">🌿 重點複習</button>
+        </div>
+
+        <!-- Content Area -->
+        <div id="content-display" class="capy-card p-6 md:p-10 min-h-[250px]"></div>
+    </div>
+
+    <script>
+        let currentTopic = '';
+        let isSimulating = false;
+
+        const topics = {
+            range: {
+                title: "🍊 range 序列模擬器",
+                description: "range(start, stop, step) 決定了水豚出現的範圍與間距。注意：不包含 stop 本身。",
+                code: `for i in range(1, 10, 2):\n    print(i)`,
+                traceLines: ["for i in range(1, 10, 2):", "    print(i)"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div class="flex gap-2" id="range-line"></div>';
+                    const line = document.getElementById('range-line');
+                    const tLines = tracer.querySelectorAll('.code-line');
+                    
+                    for (let i = 1; i < 10; i += 2) {
+                        tLines[0].classList.add('active');
+                        status.innerText = `迴圈檢查：i = ${i}`;
+                        await new Promise(r => setTimeout(r, 400));
+                        tLines[0].classList.remove('active');
+                        
+                        tLines[1].classList.add('active');
+                        const capy = document.createElement('div');
+                        capy.className = 'text-3xl fade-in';
+                        capy.innerHTML = `<div>🦫</div><div class="text-xs text-center">${i}</div>`;
+                        line.appendChild(capy);
+                        await new Promise(r => setTimeout(r, 400));
+                        tLines[1].classList.remove('active');
+                    }
+                    status.innerText = "完成！i 到達 10 停止。";
+                }
+            },
+            for: {
+                title: "🔁 for 點名領橘子",
+                description: "依序對序列中的每個元素執行相同的動作。",
+                code: `for i in range(5):\n    get_orange()`,
+                traceLines: ["for i in range(5):", "    get_orange()"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div id="actor" class="capy-actor">🦫</div><div id="items"></div>';
+                    const actor = document.getElementById('actor');
+                    const tLines = tracer.querySelectorAll('.code-line');
+                    for (let i = 0; i < 5; i++) {
+                        tLines[0].classList.add('active');
+                        status.innerText = `迴圈第 ${i} 次執行...`;
+                        await new Promise(r => setTimeout(r, 300));
+                        tLines[0].classList.remove('active');
+
+                        tLines[1].classList.add('active');
+                        actor.style.transform = 'scale(1.2)';
+                        const org = document.createElement('div');
+                        org.className = 'item-pop';
+                        org.innerText = '🍊';
+                        org.style.left = '50%';
+                        viewport.querySelector('#items').appendChild(org);
+                        await new Promise(r => setTimeout(r, 500));
+                        actor.style.transform = 'scale(1.0)';
+                        tLines[1].classList.remove('active');
+                    }
+                    status.innerText = "5 顆橘子領取完畢！";
+                }
+            },
+            nested: {
+                title: "🧺 巢狀迴圈矩陣",
+                description: "外層迴圈每跑一次，內層迴圈就會跑完一整輪。",
+                code: `for r in range(3):\n    for c in range(3):\n        print("🦫")`,
+                traceLines: ["for r in range(3):", "    for c in range(3):", "        print('🦫')"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div class="grid grid-cols-3 gap-2" id="grid"></div>';
+                    const grid = document.getElementById('grid');
+                    const tLines = tracer.querySelectorAll('.code-line');
+                    for (let i = 0; i < 9; i++) grid.innerHTML += '<div class="grid-cell" id="c-'+i+'"></div>';
+                    
+                    for (let r = 0; r < 3; r++) {
+                        tLines[0].classList.add('active');
+                        await new Promise(r => setTimeout(r, 200));
+                        tLines[0].classList.remove('active');
+                        for (let c = 0; c < 3; c++) {
+                            tLines[1].classList.add('active');
+                            await new Promise(r => setTimeout(r, 200));
+                            tLines[1].classList.remove('active');
+                            
+                            tLines[2].classList.add('active');
+                            const target = document.getElementById(`c-${r*3+c}`);
+                            target.classList.add('highlight-cell');
+                            target.innerText = '🦫';
+                            status.innerText = `正在處理 (${r}, ${c})`;
+                            await new Promise(r => setTimeout(r, 300));
+                            target.classList.remove('highlight-cell');
+                            tLines[2].classList.remove('active');
+                        }
+                    }
+                    status.innerText = "矩陣生成完畢！";
+                }
+            },
+            control: {
+                title: "🛑 break 提前結束",
+                description: "當滿足某個條件時，直接跳出當前迴圈。",
+                code: `for i in range(1, 6):\n    if i == 3:\n        break\n    print(i)`,
+                traceLines: ["for i in range(1, 6):", "    if i == 3:", "        break", "    print(i)"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div class="flex gap-4" id="line"></div>';
+                    const tLines = tracer.querySelectorAll('.code-line');
+                    for (let i = 1; i <= 5; i++) {
+                        tLines[0].classList.add('active');
+                        await new Promise(r => setTimeout(r, 300));
+                        tLines[0].classList.remove('active');
+
+                        tLines[1].classList.add('active');
+                        if (i === 3) {
+                            await new Promise(r => setTimeout(r, 300));
+                            tLines[1].classList.remove('active');
+                            tLines[2].classList.add('active');
+                            status.innerText = "條件滿足！執行 break";
+                            viewport.innerHTML += '<div class="text-3xl">🛑</div>';
+                            await new Promise(r => setTimeout(r, 600));
+                            break;
+                        }
+                        await new Promise(r => setTimeout(r, 300));
+                        tLines[1].classList.remove('active');
+
+                        tLines[3].classList.add('active');
+                        const c = document.createElement('div');
+                        c.innerText = '🦫'; c.className = 'text-3xl fade-in';
+                        document.getElementById('line').appendChild(c);
+                        await new Promise(r => setTimeout(r, 400));
+                        tLines[3].classList.remove('active');
+                    }
+                }
+            },
+            while: {
+                title: "🌊 while 條件循環",
+                description: "只要條件成立，就會不斷執行。小心不要寫成死迴圈喔！",
+                code: `while pos < 200:\n    pos += 50\n    swim()`,
+                traceLines: ["while pos < 200:", "    pos += 50", "    swim()"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div id="swimmer" style="position:absolute; left:20px">🦫 🌊</div><div style="position:absolute; right:20px; font-size:2rem">🌿</div>';
+                    const tLines = tracer.querySelectorAll('.code-line');
+                    const s = document.getElementById('swimmer');
+                    let pos = 20;
+                    while (pos < 200) {
+                        tLines[0].classList.add('active');
+                        status.innerText = `檢查條件：pos(${pos}) < 200 ? True`;
+                        await new Promise(r => setTimeout(r, 500));
+                        tLines[0].classList.remove('active');
+
+                        tLines[1].classList.add('active');
+                        pos += 60;
+                        status.innerText = `更新位置：pos = ${pos}`;
+                        await new Promise(r => setTimeout(r, 400));
+                        tLines[1].classList.remove('active');
+
+                        tLines[2].classList.add('active');
+                        s.style.left = pos + 'px';
+                        await new Promise(r => setTimeout(r, 500));
+                        tLines[2].classList.remove('active');
+                    }
+                    status.innerText = "條件不成立，跳出迴圈！";
+                }
+            },
+            math: {
+                title: "🧮 累加計算模擬",
+                description: "迴圈常用於數值累加，每圈將當前數值加到變數中。",
+                code: `total = 0\nfor i in range(1, 4):\n    total += i`,
+                traceLines: ["total = 0", "for i in range(1, 4):", "    total += i"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div class="text-5xl font-bold" id="res">0</div><div class="ml-4 text-2xl">🍊</div>';
+                    const tLines = tracer.querySelectorAll('.code-line');
+                    const res = document.getElementById('res');
+                    
+                    tLines[0].classList.add('active');
+                    status.innerText = "初始化 total = 0";
+                    await new Promise(r => setTimeout(r, 600));
+                    tLines[0].classList.remove('active');
+
+                    for (let i = 1; i <= 3; i++) {
+                        tLines[1].classList.add('active');
+                        status.innerText = `i 變為 ${i}`;
+                        await new Promise(r => setTimeout(r, 400));
+                        tLines[1].classList.remove('active');
+
+                        tLines[2].classList.add('active');
+                        let current = parseInt(res.innerText);
+                        res.innerText = current + i;
+                        res.style.color = '#8b4513';
+                        await new Promise(r => setTimeout(r, 600));
+                        res.style.color = '#5d4037';
+                        tLines[2].classList.remove('active');
+                    }
+                }
+            },
+            pattern: {
+                title: "🎨 圖形生成模擬",
+                description: "內層迴圈的次數受外層迴圈變數影響時，可生成三角形圖形。",
+                code: `for i in range(1, 4):\n    print("🦫" * i)`,
+                traceLines: ["for i in range(1, 4):", "    print('🦫' * i)"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div id="tower" class="flex flex-col items-center"></div>';
+                    const tLines = tracer.querySelectorAll('.code-line');
+                    for (let i = 1; i <= 3; i++) {
+                        tLines[0].classList.add('active');
+                        status.innerText = `第 ${i} 層...`;
+                        await new Promise(r => setTimeout(r, 400));
+                        tLines[0].classList.remove('active');
+
+                        tLines[1].classList.add('active');
+                        const r = document.createElement('div');
+                        r.innerText = "🦫".repeat(i);
+                        r.className = 'fade-in text-2xl tracking-widest';
+                        document.getElementById('tower').appendChild(r);
+                        await new Promise(r => setTimeout(r, 600));
+                        tLines[1].classList.remove('active');
+                    }
+                }
+            },
+            summary: {
+                title: "🌿 重點複習",
+                description: "穩定、Chill、精準。這就是迴圈的精神。",
+                code: `while True:\n    be_cool()`,
+                traceLines: ["while True:", "    be_cool()"],
+                simFunc: async (viewport, tracer, status) => {
+                    viewport.innerHTML = '<div class="text-6xl animate-bounce">🦫🍊🌿</div>';
+                    status.innerText = "恭喜完成迴圈章節！";
+                }
+            }
+        };
+
+        function showTopic(id) {
+            currentTopic = id;
+            document.querySelectorAll('.btn-capy').forEach(btn => btn.classList.remove('btn-active'));
+            document.getElementById(`btn-${id}`).classList.add('btn-active');
+
+            const topic = topics[id];
+            document.getElementById('sim-title').innerText = `🦫 ${topic.title}`;
+            document.getElementById('sim-status').innerText = "";
+            
+            // 準備模擬器視窗與追蹤碼
+            const viewport = document.querySelector('.sim-visual');
+            viewport.innerHTML = `<div class="text-slate-400">點擊「執行模擬」觀看代碼同步動畫</div>`;
+            
+            const tracer = document.getElementById('sim-tracer');
+            tracer.classList.remove('hidden');
+            tracer.innerHTML = topic.traceLines.map(line => `<div class="code-line">${line.replace(/ /g, '&nbsp;')}</div>`).join('');
+
+            const display = document.getElementById('content-display');
+            display.innerHTML = `
+                <div class="fade-in">
+                    <p class="text-[#8b4513] mb-4 leading-relaxed font-medium bg-[#fdf5e6]/80 p-4 rounded-xl border-l-8 border-[#8b4513] shadow-inner">${topic.description}</p>
+                    <div class="python-block p-4 overflow-x-auto"><pre class="code-font text-[#f3e5ab] text-sm">${topic.code}</pre></div>
+                </div>
+            `;
+        }
+
+        async function runCurrentSimulation() {
+            if (!currentTopic || isSimulating) return;
+            isSimulating = true;
+            const btn = document.getElementById('run-sim-btn');
+            btn.disabled = true; btn.innerText = "執行中...";
+            
+            const viewport = document.querySelector('.sim-visual');
+            const tracer = document.getElementById('sim-tracer');
+            const status = document.getElementById('sim-status');
+            
+            await topics[currentTopic].simFunc(viewport, tracer, status);
+            
+            btn.disabled = false; btn.innerText = "▶ 執行模擬";
+            isSimulating = false;
+        }
+
+        window.onload = () => showTopic('range');
+    </script>
+</body>
+</html>
